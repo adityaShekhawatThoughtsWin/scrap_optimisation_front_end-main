@@ -1,0 +1,95 @@
+@import 'tailwindcss';
+
+/* Design tokens — source of truth for Tailwind color utilities */
+:root {
+  --color-brand-primary: #17479e;
+  --color-brand-primary-dark: #0d2d6b;
+  --color-brand-accent: #1d6ce8;
+  --color-brand-danger: #d71920;
+  --color-brand-subtitle: #bedbff;
+
+  --color-surface-page: #E7E8EA;
+  --color-surface-card: #ffffff;
+  --color-surface-input: #f9fafb;
+  --color-surface-glass: rgba(255, 255, 255, 0.1);
+  --color-surface-glass-border: rgba(255, 255, 255, 0.2);
+  --color-surface-icon: rgba(255, 255, 255, 0.2);
+  --color-surface-decor: rgba(255, 255, 255, 0.32);
+
+  --color-text-primary: #0a0a0a;
+  --color-text-heading: #101828;
+  --color-text-secondary: #717182;
+  --color-text-muted: #99a1af;
+  --color-text-label: #6a7282;
+  --color-text-option: #364153;
+  --color-text-dropdown: #4c525d;
+  --color-text-inverse: #ffffff;
+  --color-text-inverse-muted: rgba(255, 255, 255, 0.8);
+  --color-text-inverse-disabled: rgba(255, 255, 255, 0.6);
+
+  --color-border-default: #e5e7eb;
+  --color-border-checkbox: #b5b5be;
+  --color-border-dropdown: #e0e0e0;
+  --color-border-selected: #19BC3C;
+
+  --color-surface-icon-muted: #f3f3f3;
+  --color-surface-glass-button: rgba(255, 255, 255, 0.24);
+  --color-surface-selected: #F4FFF7;
+
+  --shadow-preference-card: 0px 10px 15px rgba(0, 0, 0, 0.1), 0px 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-dropdown: 0px 4px 4px rgba(0, 0, 0, 0.25);
+
+  --color-button-sign-in-from: rgba(23, 71, 158, 0.6);
+  --color-button-sign-in-to: rgba(13, 45, 107, 0.6);
+
+  --color-button-dark-sign-in-from: rgba(23, 71, 158, 1);
+  --color-button-dark-sign-in-to: rgba(13, 45, 107, 1);
+
+  --shadow-card: 0px 10px 7.5px rgba(0, 0, 0, 0.1), 0px 4px 3px rgba(0, 0, 0, 0.1);
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+@theme inline {
+  --color-brand-primary: var(--color-brand-primary);
+  --color-brand-primary-dark: var(--color-brand-primary-dark);
+  --color-brand-accent: var(--color-brand-accent);
+  --color-brand-danger: var(--color-brand-danger);
+  --color-brand-subtitle: var(--color-brand-subtitle);
+
+  --color-surface-page: var(--color-surface-page);
+  --color-surface-card: var(--color-surface-card);
+  --color-surface-input: var(--color-surface-input);
+  --color-surface-glass: var(--color-surface-glass);
+  --color-surface-glass-border: var(--color-surface-glass-border);
+  --color-surface-icon: var(--color-surface-icon);
+  --color-surface-decor: var(--color-surface-decor);
+
+  --color-text-primary: var(--color-text-primary);
+  --color-text-heading: var(--color-text-heading);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-label: var(--color-text-label);
+  --color-text-option: var(--color-text-option);
+  --color-text-dropdown: var(--color-text-dropdown);
+  --color-text-inverse: var(--color-text-inverse);
+  --color-text-inverse-muted: var(--color-text-inverse-muted);
+  --color-text-inverse-disabled: var(--color-text-inverse-disabled);
+
+  --color-border-default: var(--color-border-default);
+  --color-border-checkbox: var(--color-border-checkbox);
+  --color-border-dropdown: var(--color-border-dropdown);
+  --color-border-selected: var(--color-border-selected);
+
+  --color-surface-icon-muted: var(--color-surface-icon-muted);
+  --color-surface-glass-button: var(--color-surface-glass-button);
+  --color-surface-selected: var(--color-surface-selected);
+  --font-sans: var(--font-sans);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

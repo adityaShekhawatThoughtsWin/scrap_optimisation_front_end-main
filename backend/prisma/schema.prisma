@@ -1,0 +1,30 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum UploadType {
+  heat_query_all
+  heat_query_schedule
+  heat_chem
+  scrap_chem
+  scrap_data_inventory
+  grade_list
+}
+
+model Data {
+  id          Int        @id @default(autoincrement())
+  filepath    String
+  upload_type UploadType
+  created_at  DateTime   @default(now())
+  is_deleted  Boolean    @default(false)
+
+  @@map("data")
+}

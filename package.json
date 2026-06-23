@@ -1,0 +1,17 @@
+{
+  "name": "scrap-optimisation",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "dev": "node scripts/dev.mjs",
+    "build": "npm run build:all --prefix backend",
+    "dist": "node scripts/prepare-dist.mjs",
+    "dist:quick": "SKIP_NODE_BUNDLE=1 node scripts/prepare-dist.mjs",
+    "installer:only": "node scripts/build-installer.mjs",
+    "installer:dist": "node scripts/prepare-dist.mjs",
+    "installer": "node scripts/prepare-dist.mjs && node scripts/build-installer.mjs",
+    "launch": "node launcher/launch.mjs",
+    "launch:verbose": "LAUNCHER_VERBOSE=1 node launcher/launch.mjs"
+  }
+}
