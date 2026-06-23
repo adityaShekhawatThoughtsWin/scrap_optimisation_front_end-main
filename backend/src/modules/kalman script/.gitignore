@@ -1,0 +1,40 @@
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore virtual environments
+venv/
+env/
+
+# Ignore Flask uploads/outputs (large or runtime data)
+# uploads/
+# outputs/
+
+# Ignore Flask folder (large or runtime data)
+Mingo Scrap Model/
+
+# Ignore Flask folder (large or runtime data)
+Mingo Scrap Model.zip/
+
+# Ignore saved models (large files)
+# Saved_Models/
+
+Zip folders (large files)
+Outputs.zip/
+*.zip
+
+# Ignore build artifacts
+build/
+dist/
+*.spec
+
+# Ignore executables
+# *.exe
+
+# Ignore OS/system files
+.DS_Store
+Thumbs.db
+
+# Ignore logs
+*.log

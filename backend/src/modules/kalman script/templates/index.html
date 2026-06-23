@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scrap Chemistry Prediction Tool</title>
+    <style>
+        body {
+            margin: 40px 60px;
+            background-image: url("{{ url_for('static', filename='jsw_background.jpg') }}");
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: white;
+        }
+
+        /* Optional: improve readability */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5); /* dark overlay */
+            z-index: -1;
+        }
+        /* button {
+            padding: 8px 15px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+        } */
+
+        button {
+        padding: 8px 15px;
+        cursor: pointer;
+        border: none;
+        border-radius: 5px;
+        font-size: 13px;
+        transition: 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            background-color: grey;
+            cursor: not-allowed;
+        }
+
+        #runModelBtn {
+            background-color: #3498db;
+            color: white;
+        }
+
+        #runPlannerBtn {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .section-divider {
+            margin: 24px 0 12px;
+            border-top: 1px solid rgba(255,255,255,0.25);
+            padding-top: 16px;
+        }
+
+        .planner-file-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .planner-file-row label {
+            min-width: 140px;
+            margin-bottom: 0;
+        }
+
+        .planner-file-row input[type="file"] {
+            width: auto;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        /* -----------------------------
+        Layout container
+        ----------------------------- */
+        .main-container {
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            height: 100vh;
+            padding: 60px 80px;
+        }
+
+        /* -----------------------------
+        Card UI
+        ----------------------------- */
+        .card {
+            background: rgba(0, 0, 0, 0.75);
+            padding: 25px 30px;
+            border-radius: 10px;
+            width: 720px;
+            min-height: 520px; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+
+        /* -----------------------------
+        Headings
+        ----------------------------- */
+        h2 {
+            margin-bottom: 15px;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .main-title {
+        font-size: 28px;
+        font-weight: 500;
+        color: #f5f5f5;
+        margin-bottom: 20px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        font-style: oblique;
+        }
+
+        h3 {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #f1f1f1;
+        }
+
+        /* -----------------------------
+        Labels & Inputs
+        ----------------------------- */
+        label {
+            font-size: 13px;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        input, select {
+            /* width: 100%; */
+            width: 180px;
+            padding: 5px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: none;
+        }
+
+        /* -----------------------------
+        Status Messages
+        ----------------------------- */
+        #statusText {
+            font-size: 18px;
+            color: #ffffff;
+            margin-top: 8px;
+            font-weight: bold;
+        }
+
+        #fileName {
+            font-size: 16px;
+            color: #2ecc71;
+            margin-top: 8px;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        #status {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        #big-message {
+            font-size: 28px;   /* adjust as needed */
+            font-weight: bold;
+            color: orange;
+        }
+    </style>
+</head>
+<body>
+
+<!-- <div class="main-container"> -->
+<!-- <div class="card"> -->
+
+<!-- <h2>Scrap Chemistry Prediction Tool</h2> -->
+
+<h1 class="main-title">Scrap Chemistry Prediction Tool</h1>
+
+<!-- Upload -->
+<!-- <input type="file" id="fileInput">
+<button onclick="uploadFile()">Upload</button> -->
+
+<!-- Upload file comes below because of this line -->
+<!-- <input type="file" id="fileInput">
+<button onclick="handleUpload()">Upload File</button> -->
+
+<div style="display:flex; align-items:center; gap:10px;">
+    <input type="file" id="fileInput" style="font-size:13px;">
+    <!-- <button onclick="handleUpload()">Upload File</button> -->
+    <button onclick="handleUpload()" style="padding:5px 10px; font-size:13px;">
+        Upload File
+    </button>
+</div>
+
+<p id="statusText"></p>
+<p id="fileName"></p>
+
+<h3>Select Parameters</h3>
+
+<!-- <label>Target Chem:</label>
+<select id="targetChem" onchange="resetState()">
+    <option value="Cu">Cu</option>
+    <option value="Cr">Cr</option>
+    <option value="Ni">Ni</option>
+    <option value="Sn">Sn</option>
+    <option value="P">P</option>
+</select> -->
+
+<div style="margin-bottom:10px;">
+    <label>Target Chem:</label>
+    <select id="targetChem" onchange="resetState()">
+        <option value="ALL">ALL</option>
+        <option value="Cu">Cu</option>
+        <option value="Cr">Cr</option>
+        <option value="Ni">Ni</option>
+        <option value="Sn">Sn</option>
+        <option value="P">P</option>
+        <!-- <option value="ALL">ALL</option> -->
+    </select>
+</div>
+
+<!-- <br><br> -->
+
+<!-- numb_heats_pass is auto-derived from HeatQuery_All row/HeatID count on POST /run -->
+
+<!-- <br><br> -->
+
+<!-- Run -->
+<!-- <button onclick="runKF()">Run Model</button>
+
+<!-- Buttons -->
+<div style="margin-top: 10px;">
+    <button onclick="runKF()" id="runModelBtn">Run Model</button>
+</div>
+
+<div class="section-divider">
+    <h3>Planner Inputs</h3>
+    <p style="font-size:12px; margin-bottom:12px; opacity:0.9;">
+        Upload scheduled heats and scrap inventory. KF file is used from Run Model output if you already ran it; otherwise upload it below.
+    </p>
+
+    <div class="planner-file-row">
+        <label for="heatQueryInput">Scheduled Heats:</label>
+        <input type="file" id="heatQueryInput" accept=".csv,.xlsx,.xls">
+    </div>
+    <div class="planner-file-row">
+        <label for="scrapInventoryInput">Scrap Inventory:</label>
+        <input type="file" id="scrapInventoryInput" accept=".xlsx,.xls">
+    </div>
+    <div class="planner-file-row">
+        <label for="kfFileInput">KF File (optional):</label>
+        <input type="file" id="kfFileInput" accept=".xlsx,.xls">
+    </div>
+
+    <div style="margin-top: 10px;">
+        <button onclick="runPlanner()" id="runPlannerBtn">Run Planner</button>
+    </div>
+</div>
+
+<p id="status"></p>
+
+<script>
+
+let isFileUploaded = false;
+let kfRunCompleted = false;
+
+let uploadedFiles = {
+    all_file: null,
+    chem_file: null
+};
+
+let uploadStep = 1;
+
+function handleUpload() {
+    let fileInput = document.getElementById("fileInput");
+    let file = fileInput.files[0];
+
+    if (!file) {
+        // show instruction based on step
+        if (uploadStep === 1) {
+            document.getElementById("statusText").innerText =
+                "Please choose HeatQuery_All file";
+        } else {
+            document.getElementById("statusText").innerText =
+                "Please choose HeatQuery_Chemistry file";
+        }
+        return;
+    }
+
+    let fileName = file.name;
+
+    // Validate file extension
+    // let validExt = fileName.endsWith(".xlsx") || fileName.endsWith(".csv");
+    let lowerFileName = fileName.toLowerCase();
+
+
+    let validExt =
+       lowerFileName.endsWith(".xlsx") ||
+       lowerFileName.endsWith(".csv");
+
+    if (!validExt) {
+        alert("Only .xlsx or .csv files are allowed.\n\n" +
+        "Detected file: " + fileName);
+        return;
+    }
+
+    // STEP 1 → ALL FILE
+    if (uploadStep === 1) {
+
+        if (!lowerFileName.startsWith("heatquery_all_"))  {
+            alert("Please upload file starting with HeatQuery_All_.. file (.xlsx or .csv)");
+            return;
+        }
+
+        uploadedFiles.all_file = file;
+
+        // ✅ ADD THIS LINE (SHOW FIRST FILE NAME)
+        document.getElementById("fileName").innerText =
+        "Selected:\n" + uploadedFiles.all_file.name;
+
+        uploadStep = 2;
+
+        document.getElementById("statusText").innerText =
+            "Now choose HeatQuery_Chemistry_.. file (.xlsx or .csv) and click Upload";
+
+        fileInput.value = "";
+        return;
+    }
+
+    // STEP 2 → CHEM FILE
+    if (uploadStep === 2) {
+
+        if (!lowerFileName.startsWith("heatquery_chemistry_")) {
+            alert("Please upload file starting with HeatQuery_Chemistry_");
+            return;
+        }
+
+        uploadedFiles.chem_file = file;
+
+        // SEND BOTH FILES
+        let formData = new FormData();
+        formData.append("file1", uploadedFiles.all_file);
+        formData.append("file2", uploadedFiles.chem_file);
+
+        fetch("/upload", {
+            method: "POST",
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+
+                document.getElementById("fileName").innerText =
+                    "Uploaded:\n" +
+                    uploadedFiles.all_file.name + "\n" +
+                    uploadedFiles.chem_file.name;
+
+                document.getElementById("statusText").innerText =
+                    "Files uploaded successfully ✅";
+
+                isFileUploaded = true;
+            } else {
+                alert(data.message);
+            }
+        });
+
+        uploadStep = 1;
+        fileInput.value = "";
+    }
+}
+
+function downloadOutputFile(outputFile, fallbackName) {
+    if (!outputFile || !outputFile.content_base64) return;
+
+    const byteChars = atob(outputFile.content_base64);
+    const byteNumbers = new Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) {
+        byteNumbers[i] = byteChars.charCodeAt(i);
+    }
+    const blob = new Blob([new Uint8Array(byteNumbers)], { type: outputFile.mime_type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = outputFile.filename || fallbackName || "output.xlsx";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+}
+
+function setButtonsDisabled(disabled) {
+    document.getElementById("runModelBtn").disabled = disabled;
+    document.getElementById("runPlannerBtn").disabled = disabled;
+}
+
+function runKF() {
+
+    if (!isFileUploaded) {
+        alert("Please upload HeatQuery files first");
+        return;
+    }
+
+    let targetChem = document.getElementById("targetChem").value;
+
+    document.getElementById("status").innerHTML = "<span>Running Kalman model...</span>";
+    setButtonsDisabled(true);
+
+    fetch("/run", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            target_chem: targetChem,
+            return_format: "both"
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        setButtonsDisabled(false);
+
+        if (data.success) {
+            kfRunCompleted = true;
+            document.getElementById("status").innerHTML =
+                "<span style='color:#2ecc71'>" + (data.message || "Kalman completed") + " ✅</span>";
+            if (data.output_file) {
+                downloadOutputFile(data.output_file, data.output_filename || "KF_Scarp_Chemistry_File.xlsx");
+            } else if (data.output_filename) {
+                document.getElementById("status").innerHTML +=
+                    "<br><span>Output: " + data.output_filename + "</span>";
+            }
+        } else {
+            const phase = data.phase ? " (" + data.phase + ")" : "";
+            document.getElementById("status").innerHTML =
+                "<span style='color:#e74c3c'>Error ❌" + phase + ": " + data.message + "</span>";
+        }
+    })
+    .catch(err => {
+        setButtonsDisabled(false);
+        document.getElementById("status").innerHTML =
+            "<span style='color:#e74c3c'>Error ❌: " + (err.message || err) + "</span>";
+    });
+}
+
+function runPlanner() {
+    const heatQueryInput = document.getElementById("heatQueryInput");
+    const scrapInventoryInput = document.getElementById("scrapInventoryInput");
+    const kfFileInput = document.getElementById("kfFileInput");
+
+    const heatQueryFile = heatQueryInput.files[0];
+    const scrapInventoryFile = scrapInventoryInput.files[0];
+    const kfFile = kfFileInput.files[0];
+
+    if (!heatQueryFile) {
+        alert("Please select the Scheduled Heats file (heat_query)");
+        return;
+    }
+    if (!scrapInventoryFile) {
+        alert("Please select the Scrap Inventory file");
+        return;
+    }
+    if (!kfFile && !kfRunCompleted) {
+        alert("Run Model first to generate the KF file, or upload a KF file manually");
+        return;
+    }
+
+    let formData = new FormData();
+    formData.append("heat_query", heatQueryFile);
+    formData.append("scrap_inventory", scrapInventoryFile);
+    formData.append("return_format", "both");
+    if (kfFile) {
+        formData.append("kf_file", kfFile);
+    }
+
+    document.getElementById("status").innerHTML = "<span>Running planner...</span>";
+    setButtonsDisabled(true);
+
+    fetch("/planner", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        setButtonsDisabled(false);
+
+        if (data.success) {
+            document.getElementById("status").innerHTML =
+                "<span style='color:#2ecc71'>" + (data.message || "Planner completed") + " ✅</span>";
+            if (data.output_file) {
+                downloadOutputFile(data.output_file, data.output_filename || "Scarp_Mix_Recommendation_File.xlsx");
+            } else if (data.output_filename) {
+                document.getElementById("status").innerHTML +=
+                    "<br><span>Output: " + data.output_filename + "</span>";
+            }
+        } else {
+            const phase = data.phase ? " (" + data.phase + ")" : "";
+            document.getElementById("status").innerHTML =
+                "<span style='color:#e74c3c'>Error ❌" + phase + ": " + data.message + "</span>";
+        }
+    })
+    .catch(err => {
+        setButtonsDisabled(false);
+        document.getElementById("status").innerHTML =
+            "<span style='color:#e74c3c'>Error ❌: " + (err.message || err) + "</span>";
+    });
+}
+</script>
+
+<!-- </div>
+</div> -->
+
+</body>
+</html>
