@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import lsq_linear
 from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
-from Future_Heats_Run import _DONE, BroadcastHandler, _broadcast
+from Future_Heats_Run import _DONE, BroadcastHandler, _broadcast, _handler, _log
 
 def get_base_path():
     if getattr(sys, 'frozen', False):
@@ -415,29 +415,26 @@ class KalmanFilterScrapChemistry:
         # read main input file
         # self.X_test_seq = pd.read_excel(self.cfg.input_data_path)
 
-        handler = BroadcastHandler()
-
         # -----------------------------
         # Read input file (xlsx or csv). Prefer actual file extension over input_ext
         # so a .xlsx path is never read with read_csv by mistake.
         # -----------------------------
         input_path = Path(self.cfg.input_data_path)
         suf = input_path.suffix.lower()
-        with handler.applicationbound():
-            boot  = logbook.Logger("Boot")
-            boot.info(f"Detected suffix: {suf}") 
+        with _handler.applicationbound():
+            _log.info(f"Detected suffix: {suf}") 
             print(f"Detected suffix: {suf}")
             if suf == ".csv":
-                boot.info("READING AS CSV")
+                _log.info("READING AS CSV")
                 print("READING AS CSV")
                 enc = getattr(self.cfg, "csv_encoding", None)
                 self.X_test_seq = read_csv_auto(input_path, preferred_encoding=enc)
             elif suf in (".xlsx", ".xls", ".xlsm", ".xlss"):
-                boot.info("READING AS EXCEL")
+                _log.info("READING AS EXCEL")
                 print("READING AS EXCEL")
                 self.X_test_seq = pd.read_excel(input_path)
             elif getattr(self.cfg, "input_ext", ".xlsx").lower() == ".csv":
-                boot.info("READING AS CSV (fallback branch)")
+                _log.info("READING AS CSV (fallback branch)")
                 print("READING AS CSV (fallback branch)")
                 enc = getattr(self.cfg, "csv_encoding", None)
                 self.X_test_seq = read_csv_auto(input_path, preferred_encoding=enc)
@@ -451,7 +448,7 @@ class KalmanFilterScrapChemistry:
             # -----------------------------
             if chem_file_path:
 
-                boot.info(f"Reading Chemistry file: {chem_file_path}")
+                _log.info(f"Reading Chemistry file: {chem_file_path}")
                 print("📥 Reading Chemistry file:", chem_file_path)
 
                 df_all = self.X_test_seq.copy()
@@ -488,7 +485,7 @@ class KalmanFilterScrapChemistry:
                 df_chem = df_chem.sort_values("AppliedTime")
                 df_chem = df_chem.drop_duplicates(subset=["HeatName"], keep="first")
 
-                boot.info(f"After LMF filter: {df_chem.shape}")
+                _log.info(f"After LMF filter: {df_chem.shape}")
                 print("After LMF filter:", df_chem.shape)
 
                 # Merge
@@ -507,7 +504,7 @@ class KalmanFilterScrapChemistry:
                 df_merged.drop(columns=[c for c in df_merged.columns if c.endswith("_x")], inplace=True, errors="ignore")
                 df_merged.drop(columns=["HeatName"], inplace=True, errors="ignore")
 
-                boot.info(f"Merge completed: {df_merged.shape}")
+                _log.info(f"Merge completed: {df_merged.shape}")
                 print("✅ Merge completed:", df_merged.shape)
 
                 self.X_test_seq = df_merged
@@ -548,7 +545,7 @@ class KalmanFilterScrapChemistry:
             # ensure all listed features exist in the input data
             missing = [f for f in features if f not in self.X_test_seq.columns]
             if missing:
-                boot.warning(f"Missing columns in input data as per Scrap_Chem_Input_Variables.xlsx: {missing}")
+                _log.warning(f"Missing columns in input data as per Scrap_Chem_Input_Variables.xlsx: {missing}")
                 print (f"Missing columns in input data as per Scrap_Chem_Input_Variables.xlsx: {missing}")
 
             features = [f for f in features if f in self.X_test_seq.columns]
@@ -588,10 +585,8 @@ class KalmanFilterScrapChemistry:
         )
         self.X_test_seq = self.X_test_seq.sort_values(["SequenceID", "ProdDate"]).reset_index(drop=True)
         self.X_test_seq = self.X_test_seq.head(self.cfg.numb_heats_pass).copy()
-        handler = BroadcastHandler()
-        with handler.applicationbound():
-            boot  = logbook.Logger("Boot")
-            boot.info(f"Sorted by SequenceID/ProdDate and selected top {len(self.X_test_seq)} rows")
+        with _handler.applicationbound():
+            _log.info(f"Sorted by SequenceID/ProdDate and selected top {len(self.X_test_seq)} rows")
         print(f"Sorted by SequenceID/ProdDate and selected top {len(self.X_test_seq)} rows")
 
         self.X_test_seq = derive_chemistry_scrap_mix(self.X_test_seq, self.scrap_cols, self.cfg.target_chem)
@@ -697,13 +692,11 @@ class KalmanFilterScrapChemistry:
         self.state_R = np.array([[R_value]])
 
     def run_heatwise(self):
-        handler = BroadcastHandler()
-        with handler.applicationbound():
-            boot  = logbook.Logger("Boot")
+        with _handler.applicationbound():
             rows = []
             for idx, row in self.X_test_seq.iterrows():
                 heat_id = row.get("HeatID", idx)
-                boot.info(f"Heat {int(idx+1)}/{len(self.X_test_seq)}: HeatID={heat_id}")
+                _log.info(f"Heat {int(idx+1)}/{len(self.X_test_seq)}: HeatID={heat_id}")
                 print(f"Heat {int(idx+1)}/{len(self.X_test_seq)}: HeatID={heat_id}")
 
                 W_frac = row[self.scrap_cols].astype(float).values
@@ -1078,18 +1071,14 @@ class KalmanFilterScrapChemistry:
                     with pd.ExcelWriter(heat_out_path, engine="openpyxl") as writer:
                         inp.to_excel(writer, sheet_name="Input", index=False)
 
-                    handler = BroadcastHandler()
-                    with handler.applicationbound():
-                        boot  = logbook.Logger("Boot")
-                        boot.info(f"Updated per-heat workbook: {heat_out_path}")
+                    with _handler.applicationbound():
+                        _log.info(f"Updated per-heat workbook: {heat_out_path}")
                     print(f"Updated per-heat workbook: {heat_out_path}")
 
                     return heat_out_path
             except Exception as e:
-                handler = BroadcastHandler()
-                with handler.applicationbound():
-                    boot  = logbook.Logger("Boot")
-                    boot.info(f"Could not create/update per-heat workbook: {e}")
+                with _handler.applicationbound():
+                    _log.info(f"Could not create/update per-heat workbook: {e}")
                 print(f"Could not create/update per-heat workbook: {e}")
 
         #Saving metric results into Json
@@ -1106,10 +1095,8 @@ class KalmanFilterScrapChemistry:
         # self.save_results()
         # print("Done: Kalman filter pipeline complete.")
         output_file = self.save_results()
-        handler = BroadcastHandler()
-        with handler.applicationbound():
-            boot  = logbook.Logger("Boot")
-            boot.info("Done: Kalman filter pipeline complete.")
+        with _handler.applicationbound():
+            _log.info("Done: Kalman filter pipeline complete.")
             _broadcast(_DONE)
         print("Done: Kalman filter pipeline complete.")
         

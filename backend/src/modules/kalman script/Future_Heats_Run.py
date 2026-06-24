@@ -59,6 +59,11 @@ class BroadcastHandler(logbook.Handler):
         )
         _broadcast(line)
 
+
+# ── Module-level singletons — created once, reused across all function calls ──
+_handler = BroadcastHandler()
+_log = logbook.Logger("Boot")
+
 BASE_DIR = Path(__file__).parent
 INPUT_DIR = BASE_DIR / "future_heat_inputs"
 OUTPUT_DIR = BASE_DIR / "outputs"
@@ -104,15 +109,12 @@ def run_planner(
         kf_file=kf_input_df,
     )
 
-    handler = BroadcastHandler()
-
     output_file = output_dir / PLANNER_OUTPUT_FILENAME
     with pd.ExcelWriter(output_file, engine="openpyxl") as writer:
         final_result.to_excel(writer, sheet_name="Scrap Mix (%)", index=False)
         final_result_qty.to_excel(writer, sheet_name="Scrap Mix (Tons)", index=False)
-    with handler.applicationbound():
-        boot  = logbook.Logger("Boot") 
-        boot.info(f"Saved planner result: {output_file}") 
+    with _handler.applicationbound():
+        _log.info(f"Saved planner result: {output_file}")
     print(f"Saved planner result: {output_file}")
     return output_file, final_result
 
@@ -127,8 +129,6 @@ def future_heats(heat_query: pd.DataFrame,
 
     kf_input_df = kf_file
 
-    handler = BroadcastHandler()
-
     # =========================================================================
     # READ KF FILE SHEETS
     # =========================================================================
@@ -136,18 +136,17 @@ def future_heats(heat_query: pd.DataFrame,
     #     latest_kf_file,
     #     sheet_name="Input"
     # )
-    with handler.applicationbound():
-        boot  = logbook.Logger("Boot")
-        boot.info(kf_input_df.shape)       
+    with _handler.applicationbound():
+        _log.info(kf_input_df.shape)       
         print(kf_input_df.shape)
 
         cols1 = [c for c in ['Maximum_Usage', 'Cost', 'Yield', 'Yielded_Cost', 'Inventory', 'Fe', 'C', 'Cu', 'Ni', 'Cr', 'Mo', 'Sn', 'Si', 'Mn',' Power_Cost ()', 'Flux+C ()'] if c in kf_input_df.columns]
-        boot.warning("[WARNING: ] Filling NaN with 0 for: {}".format([c for c in cols1 if kf_input_df[c].isna().any()]))
+        _log.warning("[WARNING: ] Filling NaN with 0 for: {}".format([c for c in cols1 if kf_input_df[c].isna().any()]))
         print("[WARNING: ] Filling NaN with 0 for:", [c for c in cols1 if kf_input_df[c].isna().any()])
         kf_input_df[cols1] = kf_input_df[cols1].fillna(0)
 
         cols2 = [c for c in ['Maximum_Usage', 'Cost', 'Yield', 'Yielded_Cost', 'Inventory', 'Fe', 'C', 'Cu', 'Ni', 'Cr', 'Mo', 'Sn', 'Si', 'Mn',' Power_Cost ()', 'Flux+C ()'] if c in scrap_availability_df.columns]
-        boot.warning("[WARNING: ] Filling NaN with 0 for: {}".format([c for c in cols2 if scrap_availability_df[c].isna().any()]))
+        _log.warning("[WARNING: ] Filling NaN with 0 for: {}".format([c for c in cols2 if scrap_availability_df[c].isna().any()]))
         print("[WARNING: ] Filling NaN with 0 for:", [c for c in cols2 if scrap_availability_df[c].isna().any()])
         scrap_availability_df[cols2] = scrap_availability_df[cols2].fillna(0)
 
@@ -211,14 +210,14 @@ def future_heats(heat_query: pd.DataFrame,
 
         # Print unmatched scrap types
         if missing_scraps:
-            boot.warning("[WARNING] We could not find the following scrap types in the KF file: {}".format(sorted(missing_scraps)))
+            _log.warning("[WARNING] We could not find the following scrap types in the KF file: {}".format(sorted(missing_scraps)))
             print("\n[WARNING] We could not find the following scrap types in the KF file:\n", sorted(missing_scraps))
 
         # Print chemistry columns not present in scrap availability
         missing_chem_cols = [c for c in chemistry_cols if c not in df1_input.columns]
         
         if missing_chem_cols:
-            boot.warning("[WARNING] Below chemistry columns not present in Scrap Availability file so KF chemistry values could not be updated: {}".format(missing_chem_cols))
+            _log.warning("[WARNING] Below chemistry columns not present in Scrap Availability file so KF chemistry values could not be updated: {}".format(missing_chem_cols))
             print(
                 "\n[WARNING] Below chemistry columns not present in Scrap Availability file "
                 "so KF chemistry values could not be updated:\n",
@@ -309,7 +308,7 @@ def future_heats(heat_query: pd.DataFrame,
             # ---------------------------------------------------------------------
             if heat_id in processed_heat_ids:
 
-                boot.info(f"[INFO] HeatID {heat_id} duplicate found. Skipping.")
+                _log.info(f"[INFO] HeatID {heat_id} duplicate found. Skipping.")
                 print(
                     f"[INFO] HeatID {heat_id} duplicate found. "
                     f"Skipping."
@@ -321,7 +320,7 @@ def future_heats(heat_query: pd.DataFrame,
             # Add to processed
             # ---------------------------------------------------------------------
             processed_heat_ids.add(heat_id)
-            boot.info(f"Processing HeatID -> {heat_id}") 
+            _log.info(f"Processing HeatID -> {heat_id}") 
             print(f"\nProcessing HeatID -> {heat_id}")
 
             # =========================================================================
@@ -354,12 +353,12 @@ def future_heats(heat_query: pd.DataFrame,
                 grade_specifications_df["Grade"] == current_grade
             ]
             if grade_filtered.empty:
-                boot.warning(f"[WARNING] Grade '{current_grade}' not found in Grade Specification file. Using default values.")
+                _log.warning(f"[WARNING] Grade '{current_grade}' not found in Grade Specification file. Using default values.")
                 print(f"[WARNING] Grade '{current_grade}' not found in Grade Specification file. Using default values.")
             # print(grade_filtered.head())
 
             
-            boot.info(f"filtered grade spec: {heat_row["GradeName"]}") 
+            _log.info(f"filtered grade spec: {heat_row["GradeName"]}") 
             print("filtered grade spec: ", heat_row["GradeName"])
 
             if not grade_filtered.empty:
@@ -422,7 +421,7 @@ def future_heats(heat_query: pd.DataFrame,
             #=========================================================================
             opt_result, chemistry_df = run_optimization_pulp2(df1_input, df2_target, plan_weight)
 
-            boot.info(f"shape of opt result: {opt_result.shape}")
+            _log.info(f"shape of opt result: {opt_result.shape}")
             print("shape of opt result: ", opt_result.shape)
             # opt_result = run_optimization_pulp_dummy(input_filename)
             # print(opt_result.shape)
